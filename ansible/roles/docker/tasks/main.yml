@@ -1,0 +1,29 @@
+- name: Upgrade All Packages
+  yum: name=* state=latest
+  register: upgrade_all_packages
+
+- name: Install Packages Requirements
+  yum: name=wget state=latest
+
+- name: Install Docker Engine
+  command: "curl -fsSL https://get.docker.com/ | sh"
+  args:
+    chdir: /opt
+  register: install_docker_engine
+
+- name: Install Docker compose
+  command: 'curl -L "https://github.com/docker/compose/releases/download/1.8.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+  register: install_docker_compose
+
+- name: Set Permision Docker Compose Script
+  file:
+    path: /usr/local/bin/docker-compose
+    state: file
+    mode: 744
+
+- name: Systemd Enable Docker
+  systemd:
+    name: dnf-automatic.timer
+    state: started
+    enabled: True
+  register: systemd_enable_docker

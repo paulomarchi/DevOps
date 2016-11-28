@@ -1,0 +1,61 @@
+- name: Get instance EC2 facts
+  ec2_remote_facts:
+    region: "{{ aws_region }}"
+    filters:
+      instance-type: "{{ instance_type }}"
+      key_name: "{{ project_name }}-{{ env }}-key"
+      "tag:Name": "{{ project_name }}-{{ env }}"
+  register: ec2_facts
+
+- name: EC2 Facts
+  debug:
+    msg: "{{ ec2_facts }}"
+
+- set_fact:
+    vpc_id: "{{ item.0 }}"
+  with_together:
+    - "{{ ec2_facts.instances|selectattr('state', 'equalto', 'running')|map(attribute='vpc_id')|list }}"
+
+- name: VPC ID
+  debug:
+    msg: "VPCID: {{ vpc_id }}"
+
+- name: Get only running instance IP addresses.
+  debug:
+    msg: "ID: {{ item.0}} - Instance: {{ item.1 }} has Private IP address: {{ item.2 }}, Public IP address: {{ item.3 }}, SG-GROUP: {{ item.4 }}"
+  with_together:
+    - "{{ ec2_facts.instances|selectattr('state', 'equalto', 'running')|map(attribute='id')|list }}"
+    - "{{ ec2_facts.instances|selectattr('state', 'equalto', 'running')|map(attribute='tags.Name')|list }}"
+    - "{{ ec2_facts.instances|selectattr('state', 'equalto', 'running')|map(attribute='private_ip_address')|list }}"
+    - "{{ ec2_facts.instances|selectattr('state', 'equalto', 'running')|map(attribute='public_ip_address')|list }}"
+    - "{{ ec2_facts.instances|selectattr('state', 'equalto', 'running')|map(attribute='groups.0.id')|list }}"
+
+- name: Terminate EC2 instance
+  ec2:
+    state: absent
+    region: "{{ aws_region }}"
+    wait: true
+    instance_ids: "{{ ec2_facts.instances|selectattr('state', 'equalto', 'running')|map(attribute='id')|list }}"
+  register: ec2_terminate
+  ignore_errors: True
+
+- name: Delete KeyPair
+  ec2_key:
+    name: "{{ project_name }}-{{ env }}-key"
+    region: "{{ aws_region }}"
+    state: absent
+  ignore_errors: True
+
+- name: Delete Security Group
+  ec2_group:
+    name: "{{ project_name }}_security_group"
+    description: "{{ project_name }} security group"
+    region: "{{ aws_region }}"
+    state: absent
+
+- name: Delete VPC
+  ec2_vpc:
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc_id }}"
+    resource_tags: { "Name": "{{ project_name }}" }
+    state: absent

@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - "group_vars/env.yml"
+  roles:
+    - role: ec2_terminate
+      name: "{{ project_name }}-{{ env }}"
+      class: "{{ class }}"

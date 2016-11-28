@@ -1,0 +1,25 @@
+---
+# provisions.yml
+# this brings up machines and provision them with
+# docker installs.
+
+- name: Create Infra EC2
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars_files:
+    - "group_vars/env.yml"
+  roles:
+    - role: ec2_launch
+      name: "{{ project_name }}-{{ env }}"
+      class: "{{ class }}"
+
+- name: Install Docker
+  hosts: launched
+  remote_user: centos
+  gather_facts: yes
+  become: True
+  become_user: root
+  become_method: sudo
+  roles:
+    - docker

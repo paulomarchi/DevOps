@@ -1,0 +1,9 @@
+# SSH EC2
+Host {{ item.public_ip }}
+    User {{ user }}
+    ForwardAgent yes
+    StrictHostKeyChecking no
+    PasswordAuthentication no
+    UserKnownHostsFile /dev/null
+    IdentityFile {{ work_dir }}/.aws-{{ env }}-private.pem
+    BatchMode yes
