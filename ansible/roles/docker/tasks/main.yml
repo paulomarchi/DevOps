@@ -1,9 +1,11 @@
 - name: Upgrade All Packages
-  yum: name=* state=latest
+  package: name=* state=latest
   register: upgrade_all_packages
 
 - name: Install Packages Requirements
-  yum: name=wget state=latest
+  package:
+    name: wget
+    state: latest
 
 - name: Install Docker Engine
   command: "curl -fsSL https://get.docker.com/ | sh"
