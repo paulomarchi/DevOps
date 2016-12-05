@@ -18,6 +18,9 @@
   hosts: launched
   remote_user: centos
   gather_facts: yes
+  vars_files:
+    - "group_vars/env.yml"
+    - "docker_vars/env.yml"
   become: True
   become_user: root
   become_method: sudo
