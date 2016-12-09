@@ -5,6 +5,20 @@
   package: name=* state=latest
   register: upgrade_all_packages
 
+- set_fact: compose_dir=/opt/app-docker-compose
+
+- file:
+    path: "{{ compose_dir }}"
+    state: directory
+
+- name: Upload docker-compose files
+  synchronize:
+    src: "{{ item }}"
+    dest: "{{ compose_dir }}"
+    rsync_opts: '-e "ssh -i ./.aws-{{ env }}-private.pem"'
+  with_items:
+    - django
+
 - name: Install Repo EPEL
   package: name=epel-release state=installed
 

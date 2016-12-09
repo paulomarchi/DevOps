@@ -1,0 +1,32 @@
+# - name: Remove Django Compose
+#   docker_service:
+#     project_src: django
+#     state: absent
+
+- name: Install Django Compose
+  docker_service:
+    project_name: django
+    # project_src: "{{ playbook_dir }}/django"
+    definition:
+        db:
+          image: postgres
+        web:
+          build: "{{app_docker_compose_dir}}/django"
+          command: "python manage.py runserver 0.0.0.0:8000"
+          volumes:
+            - "{{app_docker_compose_dir}}/django:/code"
+          ports:
+            - "8000:8000"
+          links:
+            - db
+  register: output
+
+- name: Output
+  debug:
+    var: output
+
+- name: Menssage
+  assert:
+    that:
+      - "web.django_web_1.state.running"
+      - "db.django_db_1.state.running"
